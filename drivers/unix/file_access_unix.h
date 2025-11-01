@@ -35,7 +35,7 @@
 
 #include <stdio.h>
 
-#if defined(UNIX_ENABLED)
+#if defined(UNIX_ENABLED) || defined(NX_ENABLED)
 
 class FileAccessUnix : public FileAccess {
 	FILE *f = nullptr;
@@ -94,4 +94,4 @@ public:
 	virtual ~FileAccessUnix();
 };
 
-#endif // UNIX_ENABLED
+#endif // UNIX_ENABLED || NX_ENABLED

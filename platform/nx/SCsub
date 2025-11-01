@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+from misc.utility.scons_hints import *
+
+import version
+Import("env")
+
+# Sources specific to Switch (NX)
+nx_sources = [
+    "os_nx.cpp",
+    "godot_nx.cpp",
+    "display_server_nx.cpp"
+]
+
+prog = env.add_program("#bin/blazium", nx_sources)
+
+version_str = "{}.{}.{}-{}".format(version.major, version.minor, version.patch, version.status)

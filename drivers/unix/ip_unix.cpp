@@ -28,7 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#if defined(UNIX_ENABLED) && !defined(UNIX_SOCKET_UNAVAILABLE)
+#if (defined(UNIX_ENABLED) || defined(NX_ENABLED)) && !defined(UNIX_SOCKET_UNAVAILABLE)
 
 #include "ip_unix.h"
 
@@ -42,7 +42,9 @@
 #ifdef __FreeBSD__
 #include <sys/types.h>
 #endif
+#ifndef NX_ENABLED
 #include <ifaddrs.h>
+#endif
 #endif
 
 #include <arpa/inet.h>
@@ -117,6 +119,15 @@ void IPUnix::_resolve_hostname(List<IPAddress> &r_addresses, const String &p_hos
 	freeaddrinfo(result);
 }
 
+#ifdef NX_ENABLED
+
+void IPUnix::get_local_interfaces(HashMap<String, Interface_Info> *r_interfaces) const {
+	struct ifaddrs *ifAddrStruct = nullptr;
+	struct ifaddrs *ifa = nullptr;
+	//TODO: nifm
+}
+
+#else
 void IPUnix::get_local_interfaces(HashMap<String, Interface_Info> *r_interfaces) const {
 	struct ifaddrs *ifAddrStruct = nullptr;
 	struct ifaddrs *ifa = nullptr;
@@ -153,6 +164,8 @@ void IPUnix::get_local_interfaces(HashMap<String, Interface_Info> *r_interfaces)
 		freeifaddrs(ifAddrStruct);
 	}
 }
+
+#endif
 
 void IPUnix::make_default() {
 	_create = _create_unix;

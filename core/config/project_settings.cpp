@@ -630,7 +630,11 @@ Error ProjectSettings::_setup(const String &p_path, const String &p_main_pack, b
 			found = _load_resource_pack(OS::get_singleton()->get_bundle_resource_dir().path_join(exec_basename + ".pck"), false, 0, true) || _load_resource_pack(OS::get_singleton()->get_bundle_resource_dir().path_join(exec_filename + ".pck"), false, 0, true);
 		}
 #endif
-
+#ifdef NX_ENABLED
+		if (!found) {
+			found = _load_resource_pack("romfs:/game.pck");
+		}
+#endif
 		if (!found) {
 			// Try to load data pack at the location of the executable.
 			// As mentioned above, we have two potential names to attempt.

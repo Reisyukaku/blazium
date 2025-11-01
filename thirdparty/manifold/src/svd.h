@@ -24,6 +24,10 @@
 // Modified from https://github.com/wi-re/tbtSVD, removing CUDA dependence and
 // approximate inverse square roots.
 
+#ifdef _S
+#undef _S
+#endif
+
 #include <cmath>
 
 #include "manifold/common.h"

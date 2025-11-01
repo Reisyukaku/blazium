@@ -96,6 +96,13 @@
 #  endif
 #endif
 
+/* detect NX platform */
+#if defined(NX_ENABLED)
+#  if !defined(__NX__)
+#     define __NX__
+#  endif
+#endif
+
 /* detect MAC OS X platform */
 #if defined(__APPLE__) || defined(MACOSX) || defined(__MACOSX__)
 #  if !defined(__MACOSX__)

@@ -30,7 +30,7 @@
 
 #include "dir_access_unix.h"
 
-#if defined(UNIX_ENABLED)
+#if defined(UNIX_ENABLED) || defined(NX_ENABLED)
 
 #include "core/os/memory.h"
 #include "core/os/os.h"
@@ -480,7 +480,9 @@ String DirAccessUnix::read_link(String p_file) {
 	if (p_file.ends_with("/")) {
 		p_file = p_file.left(-1);
 	}
-
+#ifdef NX_ENABLED
+	return p_file;
+#else
 	char buf[256];
 	memset(buf, 0, 256);
 	ssize_t len = readlink(p_file.utf8().get_data(), buf, sizeof(buf));
@@ -489,9 +491,13 @@ String DirAccessUnix::read_link(String p_file) {
 		link.parse_utf8(buf, len);
 	}
 	return link;
+#endif
 }
 
 Error DirAccessUnix::create_link(String p_source, String p_target) {
+#ifdef NX_ENABLED
+	return FAILED;
+#else
 	if (p_target.is_relative_path()) {
 		p_target = get_current_dir().path_join(p_target);
 	}
@@ -504,6 +510,7 @@ Error DirAccessUnix::create_link(String p_source, String p_target) {
 	} else {
 		return FAILED;
 	}
+#endif
 }
 
 uint64_t DirAccessUnix::get_space_left() {
@@ -566,4 +573,4 @@ DirAccessUnix::~DirAccessUnix() {
 	list_dir_end();
 }
 
-#endif // UNIX_ENABLED
+#endif // UNIX_ENABLED || NX_ENABLED

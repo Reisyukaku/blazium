@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="EditorExportPlatformNX" inherits="EditorExportPlatform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Exporter for Nintendo Switch.
+	</brief_description>
+	<description>
+	</description>
+	<tutorials>
+		<link title="Exporting for Nintendo Switch">$DOCS_URL/tutorials/export/exporting_for_nx.html</link>
+	</tutorials>
+	<members>
+		<member name="application/title" type="String" setter="" getter="">
+			Application Title
+		</member>
+		<member name="application/author" type="String" setter="" getter="">
+			Application Author
+		</member>
+		<member name="application/version" type="String" setter="" getter="">
+			Application Version
+		</member>
+		<member name="application/icon_256x256" type="String" setter="" getter="">
+			The path to the 256x256 icon that appears on the homebrew menu or dashboard.
+		</member>
+		<member name="application/export_format" type="int" setter="" getter="">
+			Application Export type:
+			- NRO = Homebrew binary format 
+			- NSP = Installable archive format
+		</member>
+	</members>
+</class>

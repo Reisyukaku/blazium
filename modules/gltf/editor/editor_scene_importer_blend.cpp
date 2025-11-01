@@ -434,6 +434,8 @@ bool EditorFileSystemImportFormatSupportQueryBlend::_autodetect_path() {
 	// Autodetect
 	auto_detected_path = "";
 
+#ifndef NX_ENABLED
+
 #if defined(MACOS_ENABLED)
 	Vector<String> find_paths = {
 		"/opt/homebrew/bin/blender",
@@ -482,7 +484,7 @@ bool EditorFileSystemImportFormatSupportQueryBlend::_autodetect_path() {
 			return true;
 		}
 	}
-
+#endif //NX_ENABLED
 	return false;
 }
 
