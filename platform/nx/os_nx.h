@@ -36,6 +36,7 @@
 #include "core/os/os.h"
 #include "drivers/unix/ip_unix.h"
 #include "drivers/unix/net_socket_unix.h"
+#include "godot_nx.h"
 
 class OS_NX : public OS {
 protected:
@@ -49,6 +50,8 @@ public:
     void delete_main_loop() override;
     void finalize() override;
     void finalize_core() override;
+
+    void initialize_swkbd();
 
     // Internal features
     bool _check_internal_feature_support(const String &p_feature) override;
@@ -87,6 +90,9 @@ public:
 
 private:
     MainLoop *main_loop = nullptr;
+    PadState padState;
+	//AudioDriverAudren driver_audren;
+	SwkbdInline inline_keyboard;
 };
 
 #endif // OS_NX_H

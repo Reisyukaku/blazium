@@ -36,9 +36,11 @@
 #include "drivers/unix/dir_access_unix.h"
 #include "drivers/unix/file_access_unix.h"
 #include "drivers/unix/thread_posix.h"
+#include "drivers/unix/net_socket_unix.h"
+#include "drivers/unix/ip_unix.h"
 
 void OS_NX::initialize() {
-	//
+	initialize_swkbd();
 }
 
 void OS_NX::initialize_core() {
@@ -70,7 +72,15 @@ void OS_NX::finalize_core() {
 }
 
 void OS_NX::initialize_joypads() {
-	//
+	padInitializeDefault(&padState);
+}
+
+void OS_NX::initialize_swkbd() {
+	/*swkbdInlineLaunchForLibraryApplet(&inline_keyboard, SwkbdInlineMode_AppletDisplay, 0);
+	swkbdInlineSetChangedStringCallback(&inline_keyboard, keyboard_string_changed_callback);
+	swkbdInlineSetMovedCursorCallback(&inline_keyboard, keyboard_moved_cursor_callback);
+	swkbdInlineSetDecidedEnterCallback(&inline_keyboard, keyboard_decided_enter_callback);
+	swkbdInlineSetDecidedCancelCallback(&inline_keyboard, keyboard_decided_cancel_callback);*/
 }
 
 void OS_NX::set_main_loop(MainLoop *p_main_loop) {

@@ -49,24 +49,31 @@ def get_flags():
     return {
         "arch": "arm64",
         "tools": False,
-        "builtin_bullet": True,
-        "builtin_enet": True,  # Not in portlibs.
+
+        #In switch-portlibs
+        "builtin_zlib": False,
+        "builtin_libpng": False,
         "builtin_freetype": False,
         "builtin_libogg": False,
-        "builtin_libpng": False,
-        "builtin_libtheora": False,
         "builtin_libvorbis": False,
-        "builtin_libvpx": False,
+        "builtin_libtheora": False,
         "builtin_libwebp": False,
-        "builtin_wslay": False,
         "builtin_mbedtls": False,
+        "builtin_wslay": False,
         "builtin_miniupnpc": False,
-        "builtin_opus": False,
-        "builtin_pcre2": False,
-        "builtin_squish": True,  # Not in portlibs.
-        "builtin_zlib": False,
+        "builtin_enet": False,
         "builtin_zstd": False,
+        "builtin_pcre2": False,
+        "builtin_bullet": False,
+        "builtin_libvpx": False,
+        "builtin_opus": False,
+
+        #NOT in switch portlibs
         "builtin_embree": True,
+        "builtin_squish": True,
+        "builtin_glslang": True,
+        "builtin_spirv_cross": True,
+        "builtin_harfbuzz": True, #Is in portlibs but need lib icu
     }
 
 
@@ -111,18 +118,16 @@ def configure(env: "SConsEnvironment"):
 
     env.Prepend(CPPFLAGS=["-isystem", "{}/libnx/include".format(devkitpro)])
     env.Prepend(LINKFLAGS = arch+["-specs={}/libnx/switch.specs".format(devkitpro)])
-    env.Append(
-        CPPFLAGS=[
-            "-DNX_ENABLED",
-            "-DLIBC_FILEIO_ENABLED",
-            "-DOPENGL_ENABLED",
-            "-DGLES_ENABLED",
-            "-DPTHREAD_ENABLED",
-            "-DPTHREAD_NO_RENAME"
-        ]
-    )
     env.Append(CPPDEFINES=[
-        "SQLITE_OMIT_LOAD_EXTENSION"
+        "SQLITE_OMIT_LOAD_EXTENSION",
+        "NX_ENABLED",
+        "EGL_ENABLED",
+        "GLES_ENABLED",
+        "OPENGL_ENABLED",
+        "LIBC_FILEIO_ENABLED",
+        "PTHREAD_ENABLED",
+        "PTHREAD_NO_RENAME",
+        "__SWITCH__"
     ])
     env.Append(LIBS=["EGL", "GLESv2", "glapi", "drm_nouveau"])
     
