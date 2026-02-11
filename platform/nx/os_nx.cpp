@@ -72,6 +72,7 @@ void OS_NX::finalize_core() {
 }
 
 void OS_NX::initialize_joypads() {
+	padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 	padInitializeDefault(&padState);
 }
 
