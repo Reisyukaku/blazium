@@ -8,7 +8,8 @@ Import("env")
 nx_sources = [
     "os_nx.cpp",
     "godot_nx.cpp",
-    "display_server_nx.cpp"
+    "display_server_nx.cpp",
+    "egl_manager_nx.cpp"
 ]
 
 prog = env.add_program("#bin/blazium", nx_sources)

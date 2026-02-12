@@ -1,7 +1,8 @@
 #include "godot_nx.h"
+#include "main/main.h"
 #include "os_nx.h"
 
-void CheckIfAppletMode() {
+int CheckIfAppletMode() {
     int apptype = appletGetAppletType();
 	if (apptype != AppletType_Application && apptype != AppletType_SystemApplication) {
         //TODO
@@ -22,16 +23,24 @@ int main(int argc, char *argv[]) {
         return ret;
 
     OS_NX os;
-    os.set_executable_path(argv[0]);
 
     char *cwd = (char *)malloc(PATH_MAX);
 	getcwd(cwd, PATH_MAX);
 
     Error err = Main::setup(argv[0], argc - 1, &argv[1]);
-	if (err == OK && Main::start() == EXIT_SUCCESS) 
-	    os.run();
+	if (err == OK && Main::start() == EXIT_SUCCESS) {
+        MainLoop *loop = os.get_main_loop();
+        if(!loop) return EXIT_FAILURE;
+
+        loop->initialize();
+        while (appletMainLoop()) {
+            if (Main::iteration())
+			    break;
+        }
+        loop->finalize();
+    }
     
-	Main::cleanup();
+	Main::cleanup(true);
 
 	chdir(cwd);
 	free(cwd);
