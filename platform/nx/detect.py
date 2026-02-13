@@ -74,6 +74,11 @@ def get_flags():
         "builtin_glslang": True,
         "builtin_spirv_cross": True,
         "builtin_harfbuzz": True, #Is in portlibs but need lib icu
+
+        # Disable modules with platform-specific dependencies
+        "module_raycast_enabled": False,
+        "module_sqlite_enabled": False,
+        "module_astcenc_enabled": False
     }
 
 
@@ -123,13 +128,15 @@ def configure(env: "SConsEnvironment"):
         "NX_ENABLED",
         "EGL_ENABLED",
         "GLES_ENABLED",
+        "GLES3_ENABLED",
         "OPENGL_ENABLED",
+        "EGL_STATIC",
         "LIBC_FILEIO_ENABLED",
         "PTHREAD_ENABLED",
         "PTHREAD_NO_RENAME",
         "__SWITCH__"
     ])
-    env.Append(LIBS=["EGL", "GLESv2", "glapi", "drm_nouveau"])
+    env.Append(LIBS=["EGL", "GLESv2", "glapi", "glad", "drm_nouveau"])
     
     # freetype depends on libpng and zlib, so bundling one of them while keeping others
     # as shared libraries leads to weird issues

@@ -38,9 +38,11 @@
 #include "drivers/unix/thread_posix.h"
 #include "drivers/unix/net_socket_unix.h"
 #include "drivers/unix/ip_unix.h"
+#include "display_server_nx.h"
 
 void OS_NX::initialize() {
 	initialize_swkbd();
+	DisplayServerNX::get_singleton()->Initialize();
 }
 
 void OS_NX::initialize_core() {

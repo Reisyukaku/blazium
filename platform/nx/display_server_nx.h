@@ -4,8 +4,6 @@
 #include "egl_manager_nx.h"
 
 class DisplayServerNX : public DisplayServer {
-    EGLManagerNX *egl_manager = nullptr;
-
 public:
     static DisplayServerNX *get_singleton();
 
@@ -21,7 +19,13 @@ public:
 
 	virtual void swap_buffers() override;
 
+    void gl_window_make_current(DisplayServer::WindowID p_window_id) override;
+    int64_t window_get_native_handle(HandleType p_handle_type, WindowID p_window) const override;
+
+    void Initialize();
+
 private:
     int current_width, current_height;
     bool is_docked;
+    EGLManagerNX *egl_manager = nullptr;
 };
