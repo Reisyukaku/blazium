@@ -2,9 +2,14 @@
 #include "main/main.h"
 #include "os_nx.h"
 
+extern "C" {
+    u32 __nx_applet_type = AppletType_Application;
+}
+
 int CheckIfAppletMode() {
     int apptype = appletGetAppletType();
-	if (apptype != AppletType_Application && apptype != AppletType_SystemApplication) {
+	if (apptype != AppletType_Application || 
+        apptype != AppletType_SystemApplication) {
         //TODO
         return EXIT_FAILURE;
     }

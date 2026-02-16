@@ -72,6 +72,9 @@ public:
 	virtual Error run(const Ref<EditorExportPreset> &p_preset, int p_device, BitField<EditorExportPlatform::DebugFlags> p_debug_flags) override;
 	virtual void cleanup() override;
 
+	Error export_as_nro(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags);
+	Error export_as_nsp(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags);
+
 	EditorExportPlatformNX();
 	~EditorExportPlatformNX();
 

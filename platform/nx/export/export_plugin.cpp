@@ -163,28 +163,17 @@ Error EditorExportPlatformNX::_extract_template(const String &p_template, const 
 	return OK;
 }
 
-Error EditorExportPlatformNX::export_project(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
-    Error err = OK;
-    
-    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Starting NX Export...");
-    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Path: " + p_path);
-    
-    String title = p_preset->get("application/title");
+Error EditorExportPlatformNX::export_as_nro(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
+	Error err = OK;
+
+	String devkitpro = OS::get_singleton()->get_environment("DEVKITPRO");
+
+	String title = p_preset->get("application/title");
     String author = p_preset->get("application/author");
     String version = p_preset->get("application/version");
     String icon = p_preset->get("application/icon_256x256");
-    
-    String tmp_dir = EditorPaths::get_singleton()->get_cache_dir().path_join("nx_export_temp");
 
-	String devkitpro = OS::get_singleton()->get_environment("DEVKITPRO");
-    if (devkitpro.is_empty()) {
-        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), 
-                   "DEVKITPRO environment variable not set. Please install DevkitPro.");
-        return ERR_CANT_CREATE;
-    }
-
-	String nacptool = devkitpro.path_join("tools").path_join("bin").path_join("nacptool");
-    String elf2nro = devkitpro.path_join("tools").path_join("bin").path_join("elf2nro");
+	String tmp_dir = EditorPaths::get_singleton()->get_cache_dir().path_join("nx_export_temp");
     
     // Create temp directory
     Ref<DirAccess> dir = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
@@ -273,6 +262,7 @@ Error EditorExportPlatformNX::export_project(const Ref<EditorExportPreset> &p_pr
             //return err;
         }
     }
+
     // Build NRO
     String out_nro = p_path.ends_with(".nro") ? p_path : p_path + ".nro";
 
@@ -299,10 +289,186 @@ Error EditorExportPlatformNX::export_project(const Ref<EditorExportPreset> &p_pr
         add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), output);
         return ERR_CANT_CREATE;
     }
+
+	add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Export NRO successful: " + out_nro);
+
+	return err;
+}
+
+Error EditorExportPlatformNX::export_as_nsp(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
+	Error err = OK;
+
+	String devkitpro = OS::get_singleton()->get_environment("DEVKITPRO");
+
+	String title = p_preset->get("application/title");
+    String author = p_preset->get("application/author");
+    String version = p_preset->get("application/version");
+    String icon = p_preset->get("application/icon_256x256");
+	String npdm_json = p_preset->get("application/npdm_json");
+
+	String buildPfs0 = devkitpro.path_join("tools").path_join("bin").path_join("build_pfs0");
+	String elf2nso = devkitpro.path_join("tools").path_join("bin").path_join("elf2nso");
+	String npdmTool = devkitpro.path_join("tools").path_join("bin").path_join("npdmtool");
+    String buildRomfs = devkitpro.path_join("tools").path_join("bin").path_join("build_romfs");
+
+	String tmp_dir = EditorPaths::get_singleton()->get_cache_dir().path_join("nx_export_temp");
+
+	int exit_code;
+    String output;
+
+	// Create temp directory
+    Ref<DirAccess> dir = DirAccess::create(DirAccess::ACCESS_FILESYSTEM);
+    if (!dir->dir_exists(tmp_dir)) {
+        err = dir->make_dir_recursive(tmp_dir);
+        if (err != OK) {
+            add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to create temp directory: " + tmp_dir);
+            return err;
+        }
+    }
+
+	// Get template
+    String error_msg;
+    String template_path = p_debug ? p_preset->get("custom_template/debug") : p_preset->get("custom_template/release");
     
-    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Export successful: " + out_nro);
+    if (template_path.is_empty()) {
+        add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Looking for template...");
+        template_path = find_export_template("nx.zip", &error_msg);
+        if (template_path.is_empty()) {
+            add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Template not found: " + error_msg);
+            return ERR_FILE_NOT_FOUND;
+        }
+    }
     
-    return OK;
+    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Template: " + template_path);
+    
+    if (!FileAccess::exists(template_path)) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Template file does not exist");
+        return ERR_FILE_NOT_FOUND;
+    }
+
+    String elf_filename = p_debug ? "nx_debug.arm64" : "nx_release.arm64";
+	String json_filename = "npdm.json";
+    String engine_elf = template_path.get_base_dir().path_join(elf_filename);
+    if (!FileAccess::exists(engine_elf))
+    {
+        err = _extract_template(template_path, elf_filename);
+        if (err) {
+            add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to extract template: " + err);
+            //return err;
+        }
+
+		//If no json specified, use default
+		if(npdm_json.is_empty())
+		{
+			err = _extract_template(template_path, json_filename);
+			if (err) {
+				add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to extract default npdm json: " + err);
+				//return err;
+			}
+			npdm_json = template_path.get_base_dir().path_join(json_filename);
+		}
+    }
+    
+    // Export romfs
+    NxExportData expData;
+    expData.asset_path = tmp_dir.path_join("romfs");
+    expData.debug = p_debug;
+    
+    err = dir->make_dir_recursive(expData.asset_path);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to create romfs directory");
+        return err;
+    }
+    
+    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Exporting project files...");
+    err = export_project_files(p_preset, p_debug, 
+                               EditorExportPlatformNX::_save_romfs_files, 
+                               EditorExportPlatformNX::_remove_romfs_files, 
+                               (void *)&expData, 
+                               EditorExportPlatformNX::_save_shared_obj);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to export project files, error: " + itos(err));
+        return err;
+    }
+
+	//Build romfs
+	List<String> romfs_args;
+    romfs_args.push_back(expData.asset_path);
+    romfs_args.push_back(tmp_dir.path_join("romfs.bin"));
+	err = OS::get_singleton()->execute("build_romfs", romfs_args, &output, &exit_code);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to execute build_romfs: " + itos(err));
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Output: " + output);
+        return ERR_CANT_CREATE;
+    }
+
+	//Build NSO
+	List<String> nso_args;
+    nso_args.push_back(engine_elf);
+    nso_args.push_back(tmp_dir.path_join("exefs").path_join("main"));
+	err = OS::get_singleton()->execute("elf2nso", nso_args, &output, &exit_code);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to execute elf2nso: " + itos(err));
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Output: " + output);
+        return ERR_CANT_CREATE;
+    }
+
+	//Build NPDM
+	List<String> npdm_args;
+    npdm_args.push_back(npdm_json);
+    npdm_args.push_back(tmp_dir.path_join("exefs").path_join("main.npdm"));
+	err = OS::get_singleton()->execute("npdmtool", npdm_args, &output, &exit_code);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to execute npdmtool: " + itos(err));
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Output: " + output);
+        return ERR_CANT_CREATE;
+    }
+
+	//Build PFS0
+	List<String> pfs0_args;
+	String dest_file = p_path.path_join(title + ".nsp");
+    pfs0_args.push_back(tmp_dir.path_join("exefs"));
+    pfs0_args.push_back(dest_file);
+	err = OS::get_singleton()->execute("build_pfs0", pfs0_args, &output, &exit_code);
+    if (err != OK) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Failed to execute build_pfs0: " + itos(err));
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), "Output: " + output);
+        return ERR_CANT_CREATE;
+    }
+
+	return err;
+}
+
+Error EditorExportPlatformNX::export_project(const Ref<EditorExportPreset> &p_preset, bool p_debug, const String &p_path, BitField<EditorExportPlatform::DebugFlags> p_flags) {
+    Error err = OK;
+    
+    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Starting NX Export...");
+    add_message(EXPORT_MESSAGE_INFO, TTR("Export"), "Path: " + p_path);
+    
+	int exportType = p_preset->get("application/export_format");
+    
+	String devkitpro = OS::get_singleton()->get_environment("DEVKITPRO");
+    if (devkitpro.is_empty()) {
+        add_message(EXPORT_MESSAGE_ERROR, TTR("Export"), 
+                   "DEVKITPRO environment variable not set. Please install DevkitPro.");
+        return ERR_CANT_CREATE;
+    }
+
+	switch(exportType)
+	{
+		case EXPORT_FORMAT_NRO:
+		{
+			err = export_as_nro(p_preset, p_debug, p_path, p_flags);
+			break;
+		}
+		case EXPORT_FORMAT_NSP:
+		{
+			err = export_as_nsp(p_preset, p_debug, p_path, p_flags);
+			break;
+		}
+	}
+    
+    return err;
 }
 
 void EditorExportPlatformNX::get_export_options(List<ExportOption> *r_options) const {
@@ -311,6 +477,7 @@ void EditorExportPlatformNX::get_export_options(List<ExportOption> *r_options) c
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/author", PROPERTY_HINT_PLACEHOLDER_TEXT, "App Author"), "Blazium"));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/version", PROPERTY_HINT_PLACEHOLDER_TEXT, "App Version"), "1.0"));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/icon_256x256", PROPERTY_HINT_GLOBAL_FILE, "*.jpg"), ""));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/npdm_json", PROPERTY_HINT_GLOBAL_FILE, "*.json"), ""));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "application/export_format", PROPERTY_HINT_ENUM, "NRO,NSP"), EXPORT_FORMAT_NRO, false, true));
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "custom_template/debug", PROPERTY_HINT_GLOBAL_FILE, "*.elf"), ""));
