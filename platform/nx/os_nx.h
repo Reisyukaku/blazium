@@ -88,9 +88,11 @@ public:
     Error get_entropy(uint8_t *r_buffer, int p_bytes) override;
     TimeZoneInfo get_time_zone_info() const override;
 
+public:
+    PadState padState;
+
 private:
     MainLoop *main_loop = nullptr;
-    PadState padState;
 	//AudioDriverAudren driver_audren;
 	SwkbdInline inline_keyboard;
 };

@@ -20,8 +20,9 @@ int CheckIfAppletMode() {
 int main(int argc, char *argv[]) {
 	socketInitializeDefault();
 	nxlinkStdio();
-
 	romfsInit();
+	csrngInitialize();
+	timeInitialize();
 
     int ret = CheckIfAppletMode();
     if(ret != EXIT_SUCCESS) 
@@ -51,6 +52,8 @@ int main(int argc, char *argv[]) {
 	free(cwd);
 
     romfsExit();
+	timeExit();
+	csrngExit();
 	socketExit();
 
     return os.get_exit_code();

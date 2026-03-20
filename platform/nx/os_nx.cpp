@@ -40,6 +40,8 @@
 #include "drivers/unix/ip_unix.h"
 #include "display_server_nx.h"
 
+static u64 start_tick = 0;
+
 void OS_NX::initialize() {
 	initialize_swkbd();
 	DisplayServerNX::get_singleton()->Initialize();
@@ -49,6 +51,7 @@ void OS_NX::initialize_core() {
 #ifdef THREADS_ENABLED
 	init_thread_posix();
 #endif
+	start_tick = armGetSystemTick();
 
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_RESOURCES);
 	FileAccess::make_default<FileAccessUnix>(FileAccess::ACCESS_USERDATA);
@@ -165,19 +168,38 @@ MainLoop *OS_NX::get_main_loop() const {
 }
 
 OS::DateTime OS_NX::get_datetime(bool utc) const {
+	u64 timestamp = 0;
+	TimeCalendarTime caltime;
+	TimeCalendarAdditionalInfo info;
+
+	if (R_SUCCEEDED(timeGetCurrentTime(utc ? TimeType_UserSystemClock : TimeType_LocalSystemClock, &timestamp))) {
+		if (R_SUCCEEDED(timeToCalendarTimeWithMyRule(timestamp, &caltime, &info))) {
+			DateTime dt;
+			dt.year = caltime.year;
+			dt.month = (Month)caltime.month;
+			dt.day = caltime.day;
+			dt.hour = caltime.hour;
+			dt.minute = caltime.minute;
+			dt.second = caltime.second;
+			return dt;
+		}
+	}
 	return {};
 }
 
 void OS_NX::delay_usec(uint32_t p_usec) const {
-	//
+	svcSleepThread(p_usec * 1000ULL);
 }
 
 uint64_t OS_NX::get_ticks_usec() const {
-	return 0;
+	u64 ticks = armGetSystemTick() - start_tick;
+	return armTicksToNs(ticks) / 1000;
 }
 
 Error OS_NX::get_entropy(uint8_t *r_buffer, int p_bytes) {
-	memset(r_buffer, 0, p_bytes);
+	if (R_FAILED(csrngGetRandomBytes(r_buffer, p_bytes))) {
+		return ERR_CANT_CREATE;
+	}
 	return OK;
 }
 
