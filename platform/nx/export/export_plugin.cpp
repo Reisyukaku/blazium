@@ -152,7 +152,7 @@ Error EditorExportPlatformNX::_extract_template(const String &p_template, const 
 		unzCloseCurrentFile(pkg);
 
 		//write
-		String dst = p_template.get_base_dir();
+		String dst = p_template.get_base_dir().path_join(file);
 		Error err = _write_or_error(data.ptr(), data.size(), dst, "Prepare Templates", false);
 		if (err != OK) {
 			unzClose(pkg);
@@ -252,7 +252,7 @@ Error EditorExportPlatformNX::export_as_nro(const Ref<EditorExportPreset> &p_pre
         return ERR_FILE_NOT_FOUND;
     }
 
-    String elf_filename = p_debug ? "nx_debug.arm64" : "nx_release.arm64";
+    String elf_filename = p_debug ? "blazium.nx.template_debug.arm64" : "blazium.nx.template_release.arm64";
     String engine_elf = template_path.get_base_dir().path_join(elf_filename);
     if (!FileAccess::exists(engine_elf))
     {
@@ -346,7 +346,7 @@ Error EditorExportPlatformNX::export_as_nsp(const Ref<EditorExportPreset> &p_pre
         return ERR_FILE_NOT_FOUND;
     }
 
-    String elf_filename = p_debug ? "nx_debug.arm64" : "nx_release.arm64";
+    String elf_filename = p_debug ? "blazium.nx.template_debug.arm64" : "blazium.nx.template_release.arm64";
 	String json_filename = "npdm.json";
     String engine_elf = template_path.get_base_dir().path_join(elf_filename);
     if (!FileAccess::exists(engine_elf))

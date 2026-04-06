@@ -94,8 +94,8 @@ def configure(env: "SConsEnvironment"):
     toolchain_bin = os.path.join(devkita64, "bin")
     env["CC"] = os.path.join(toolchain_bin, "aarch64-none-elf-gcc")
     env["CXX"] = os.path.join(toolchain_bin, "aarch64-none-elf-g++")
-    env["AR"] = os.path.join(toolchain_bin, "aarch64-none-elf-ar")
-    env["RANLIB"] = os.path.join(toolchain_bin, "aarch64-none-elf-ranlib")
+    env["AR"] = os.path.join(toolchain_bin, "aarch64-none-elf-gcc-ar")
+    env["RANLIB"] = os.path.join(toolchain_bin, "aarch64-none-elf-gcc-ranlib")
     env["AS"] = os.path.join(toolchain_bin, "aarch64-none-elf-as")
 
     env["vulkan"] = False
